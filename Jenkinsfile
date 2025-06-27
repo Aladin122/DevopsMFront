@@ -1,129 +1,101 @@
 pipeline {
     agent any
 
+    tools {
+        // Optional: if you ever want to use Node tool from Jenkins "Tools"
+        // nodejs 'Node18' 
+    }
+
     environment {
-        DOCKER_IMAGE_NAME = 'front'
-        DOCKER_IMAGE_TAG = 'latest'
-        DOCKER_REGISTRY = 'localhost:5000'
-        FULL_IMAGE = "${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+        SONARQUBE_ENV = 'SonarQubeServer'
+        NEXUS_URL = '192.168.235.132:8081'
         NEXUS_CREDENTIALS_ID = 'nexus-creds'
-        NEXUS_URL = 'http://nexusmain:8081'
         NEXUS_REPO = 'frontend-builds'
     }
 
     stages {
-        stage('📦 Checkout Source Code') {
+        stage('Clone') {
             steps {
-                echo "🔄 Checking out the latest source code..."
+                echo '🔄 Cloning repository...'
                 checkout scm
             }
         }
 
-        stage('🧼 Clean Previous Build') {
+        stage('Clean') {
             steps {
-                echo "🧹 Cleaning up previous build artifacts..."
+                echo '🧹 Cleaning previous builds...'
                 sh 'rm -rf dist react-build.tar.gz || true'
             }
         }
 
-        stage('📥 Install Dependencies') {
+        stage('Install Dependencies') {
             steps {
-                echo "📦 Installing npm dependencies..."
+                echo '📦 Installing npm dependencies...'
                 sh 'npm install'
             }
         }
 
-        stage('🛠️ Build React App') {
+        stage('Build') {
             steps {
-                echo "🔧 Building the React application..."
+                echo '🔧 Building React app...'
                 sh 'npm run build'
             }
         }
 
-        stage('🔍 SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
-                echo "🧪 Running SonarQube analysis..."
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        echo "📥 Installing SonarScanner CLI..."
-                        npm install --no-save sonar-scanner
-                        echo "🚀 Launching SonarScanner..."
-                        npx sonar-scanner
-                    '''
+                echo '🔍 Running SonarQube scan...'
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            echo "📥 Installing SonarScanner CLI..."
+                            npm install --no-save sonar-scanner
+
+                            echo "🚀 Launching SonarScanner..."
+                            npx sonar-scanner \
+                                -Dsonar.projectKey=frontend-react \
+                                -Dsonar.sources=src \
+                                -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                -Dsonar.host.url=$SONAR_HOST_URL \
+                                -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
 
-        stage('📚 Archive Frontend Build') {
+        stage('Archive Build') {
             steps {
-                echo "🗜️ Archiving build output to react-build.tar.gz..."
+                echo '🗜️ Archiving build output...'
                 sh 'tar -czf react-build.tar.gz dist/'
             }
         }
 
-        stage('🚀 Upload to Nexus') {
+        stage('Upload to Nexus') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: NEXUS_CREDENTIALS_ID,
-                    usernameVariable: 'NEXUS_USER',
-                    passwordVariable: 'NEXUS_PASS'
-                )]) {
+                echo '📤 Uploading archive to Nexus...'
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     sh '''
-                        echo "📤 Uploading archive to Nexus..."
-
                         if [ ! -f react-build.tar.gz ]; then
-                            echo "❌ Error: Archive react-build.tar.gz not found!"
-                            exit 1
+                          echo "❌ Build archive not found!"
+                          exit 1
                         fi
 
                         curl -u $NEXUS_USER:$NEXUS_PASS \
                              --upload-file react-build.tar.gz \
-                             "$NEXUS_URL/repository/$NEXUS_REPO/react-build.tar.gz"
+                             $NEXUS_URL/repository/$NEXUS_REPO/react-build.tar.gz
                     '''
-                }
-            }
-        }
-
-        stage('🐳 Build Docker Image') {
-            steps {
-                echo "🔨 Building Docker image: ${FULL_IMAGE}..."
-                sh """
-                    docker build --build-arg VITE_API_URL=http://192.168.244.128:8089 -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .
-                    docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ${FULL_IMAGE}
-                """
-            }
-        }
-
-        stage('📦 Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: NEXUS_CREDENTIALS_ID,
-                    usernameVariable: 'NEXUS_USER',
-                    passwordVariable: 'NEXUS_PASS'
-                )]) {
-                    sh """
-                        echo "🔐 Logging in to Docker registry..."
-                        echo "\${NEXUS_PASS}" | docker login ${DOCKER_REGISTRY} -u \${NEXUS_USER} --password-stdin
-
-                        echo "📤 Pushing Docker image to Nexus registry..."
-                        docker push ${FULL_IMAGE} || (sleep 5 && docker push ${FULL_IMAGE}) || (sleep 10 && docker push ${FULL_IMAGE})
-
-                        echo "🚪 Logging out from Docker registry..."
-                        docker logout ${DOCKER_REGISTRY}
-                    """
                 }
             }
         }
     }
 
     post {
-        always {
-            echo "🧽 Cleaning up Docker images and archive..."
-            sh """
-                docker rmi ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} || true
-                docker rmi ${FULL_IMAGE} || true
-                rm -f react-build.tar.gz || true
-            """
+        success {
+            echo '✅ Frontend pipeline completed successfully!'
+        }
+        failure {
+            echo '❌ Frontend pipeline failed.'
         }
     }
 }

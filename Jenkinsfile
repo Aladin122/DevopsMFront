@@ -42,23 +42,25 @@ pipeline {
             }
         }
 
-      //  stage('SonarQube Analysis') {
-    //steps {
-      //  echo '🔍 Running SonarQube scan...'
-       // withSonarQubeEnv("${SONARQUBE_ENV}") {
-         //   withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-           //     sh '''
-             //       export NODE_OPTIONS=--max-old-space-size=2048
-               //     npm install --no-save sonar-scanner
-                 //   npx sonar-scanner \
-                   //     -Dsonar.projectKey=frontend-react \
-                     //   -Dsonar.sources=src \
-                       // -Dsonar.host.url=$SONAR_HOST_URL \
-                       // -Dsonar.login=$SONAR_TOKEN
-               // '''
-            //}
-      //  }
-    //}
+      stage('SonarQube Analysis') {
+    steps {
+        echo '🔍 Running SonarQube scan...'
+        withSonarQubeEnv("${SONARQUBE_ENV}") {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                    export NODE_OPTIONS=--max-old-space-size=2048
+                    npm install --no-save sonar-scanner
+                    npx sonar-scanner \
+                        -Dsonar.projectKey=frontend-react \
+                        -Dsonar.sources=src \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_TOKEN
+                '''
+            }
+        }
+    }
+}
+
 
         stage('Archive Build') {
             steps {

@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         // Optional: if you ever want to use Node tool from Jenkins "Tools"
-        // nodejs 'Node18' 
+        nodejs 'Node18' 
     }
 
     environment {

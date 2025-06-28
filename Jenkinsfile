@@ -17,35 +17,35 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                echo '🔄 Cloning repository...'
+                echo ' Cloning repository...'
                 checkout scm
             }
         }
 
         stage('Clean') {
             steps {
-                echo '🧹 Cleaning previous builds...'
+                echo 'Cleaning previous builds...'
                 sh 'rm -rf dist react-build.tar.gz || true'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo '📦 Installing npm dependencies...'
+                echo ' Installing npm dependencies...'
                 sh 'npm install'
             }
         }
 
         stage('Build') {
             steps {
-                echo '🔧 Building React app...'
+                echo ' Building React app...'
                 sh 'npm run build'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                echo '🔍 Running SonarQube scan...'
+                echo ' Running SonarQube scan...'
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
@@ -71,7 +71,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Building Docker image...'
+                echo ' Building Docker image...'
                 script {
                     sh "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
                 }
@@ -80,11 +80,11 @@ pipeline {
 
         stage('Upload to Nexus') {
             steps {
-                echo '📤 Uploading archive to Nexus...'
+                echo ' Uploading archive to Nexus...'
                 withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     sh '''
                         if [ ! -f react-build.tar.gz ]; then
-                          echo "❌ Build archive not found!"
+                          echo " Build archive not found!"
                           exit 1
                         fi
 
@@ -99,10 +99,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Frontend pipeline completed successfully!'
+            echo ' Frontend pipeline completed successfully!'
         }
         failure {
-            echo '❌ Frontend pipeline failed.'
+            echo ' Frontend pipeline failed.'
         }
     }
 }

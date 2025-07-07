@@ -5,11 +5,11 @@ services:
     image: 192.168.235.132:8082/docker-releases2/react-frontend:latest
     container_name: frontend-app
     ports:
-      - "3000:80"  
+      - "5173:80"  # 👉 redirige le port 5173 de l'hôte vers le port 80 du conteneur
     networks:
       - kaddem-network
     restart: unless-stopped
 
 networks:
   kaddem-network:
-    external: true  
+    external: true

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend-app:
+    image: 192.168.235.132:8082/docker-releases2/react-frontend:latest
+    container_name: frontend-app
+    ports:
+      - "3000:80"  
+    networks:
+      - kaddem-network
+    restart: unless-stopped
+
+networks:
+  kaddem-network:
+    external: true  

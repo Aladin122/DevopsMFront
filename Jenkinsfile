@@ -1,130 +1,75 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'Node18' // Assure-toi que Node18 est bien défini dans Jenkins > Global Tools
-    }
-
     environment {
-        SONARQUBE_ENV = 'SonarQubeServer'
-        IMAGE_NAME = 'frontend-react'
-        DOCKER_TAG = 'latest'
-
         NEXUS_URL = '192.168.235.132:8081'
-        NEXUS_DOCKER_URL = '192.168.235.132:8082'
-        NEXUS_DOCKER_REPO = 'docker-releases2'
-
-        NEXUS_DOCKER_CREDS_ID = 'nexus-docker-creds'
-        NEXUS_CREDENTIALS_ID = 'nexus-creds'
-        NEXUS_REPO = 'frontend-builds'
+        NEXUS_REPO = 'repository/frontend-builds'
+        NEXUS_IMAGE_REPO = 'docker-releases2'
+        FRONTEND_IMAGE = "192.168.235.132:8082/${NEXUS_IMAGE_REPO}/react-frontend:latest"
     }
 
     stages {
-        stage('Clone') {
+
+        stage('Build React App') {
             steps {
-                echo '📥 Cloning repository...'
-                checkout scm
+                echo '📦 Building React frontend...'
+                sh '''
+                    npm install
+                    npm run build
+                    tar -czf react-build.tar.gz dist/
+                '''
             }
         }
 
-        stage('Clean') {
+        stage('Upload Build to Nexus') {
             steps {
-                echo '🧹 Cleaning previous build...'
-                sh 'rm -rf dist react-build.tar.gz || true'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                echo '📦 Installing npm dependencies...'
-                sh 'npm install'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo '🛠️ Building React app...'
-                sh 'npm run build'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                echo '🔍 Running SonarQube analysis...'
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            export NODE_OPTIONS=--max-old-space-size=2048
-                            npm install --no-save sonar-scanner
-                            npx sonar-scanner \
-                              -Dsonar.projectKey=frontend-react \
-                              -Dsonar.sources=src \
-                              -Dsonar.host.url=$SONAR_HOST_URL \
-                              -Dsonar.login=$SONAR_TOKEN
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Archive Build') {
-            steps {
-                echo '📦 Archiving dist/ into react-build.tar.gz...'
-                sh 'tar -czf react-build.tar.gz dist/'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                echo '🐳 Building Docker image...'
-                sh "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
-            }
-        }
-
-        stage('Push Docker Image to Nexus') {
-            steps {
-                echo '📤 Pushing Docker image to Nexus...'
-                withCredentials([usernamePassword(credentialsId: "${NEXUS_DOCKER_CREDS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    echo '⬆️ Uploading build to Nexus...'
                     sh """
-                        echo "$DOCKER_PASS" | docker login ${NEXUS_DOCKER_URL} -u "$DOCKER_USER" --password-stdin
-                        docker tag ${IMAGE_NAME}:${DOCKER_TAG} ${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}
-                        docker push ${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}
+                        curl -u $NEXUS_USER:$NEXUS_PASS --upload-file react-build.tar.gz $NEXUS_URL/$NEXUS_REPO/react-build.tar.gz
                     """
                 }
             }
         }
 
-        stage('Upload Archive to Nexus') {
+        stage('Build Docker Image') {
             steps {
-                echo '📤 Uploading react-build.tar.gz to Nexus...'
-                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    sh '''
-                        curl -u $NEXUS_USER:$NEXUS_PASS \
-                             --upload-file react-build.tar.gz \
-                             $NEXUS_URL/repository/$NEXUS_REPO/react-build.tar.gz
-                    '''
+                echo '🐳 Building Docker image for frontend...'
+                sh """
+                    docker build -t ${FRONTEND_IMAGE} .
+                """
+            }
+        }
+
+        stage('Push Image to Nexus Docker Registry') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login 192.168.235.132:8082 -u "$DOCKER_USER" --password-stdin
+                        docker push ${FRONTEND_IMAGE}
+                    """
                 }
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Deploy Frontend with Docker Compose') {
             steps {
                 echo '🚀 Deploying frontend container...'
                 sh '''
                     docker rm -f frontend-app || true
-                    docker-compose pull || true
-                    docker-compose up -d
+                    docker-compose -f docker-compose.front.yml pull || true
+                    docker-compose -f docker-compose.front.yml up -d
                 '''
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Frontend pipeline completed successfully!'
-        }
         failure {
-            echo '❌ Frontend pipeline failed.'
+            echo '❌ Le pipeline a échoué.'
+        }
+        success {
+            echo '✅ Déploiement terminé avec succès.'
         }
     }
 }

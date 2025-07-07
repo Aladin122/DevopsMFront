@@ -8,7 +8,7 @@ pipeline {
     environment {
         SONARQUBE_ENV = 'SonarQubeServer'
         NEXUS_URL = 'http://192.168.235.132:8081'
-        NEXUS_DOCKER_REPO = 'docker-releases-front'
+        NEXUS_DOCKER_REPO = 'docker-releases2'
         NEXUS_REPO = 'frontend-builds'  // for build tar.gz
         NEXUS_CREDENTIALS_ID = 'nexus-creds'
         IMAGE_NAME = 'frontend-react'

@@ -107,11 +107,17 @@ pipeline {
             }
         }
 
-        stage('Check docker-compose file') {
+        stage('Prepare Docker Network') {
             steps {
-                echo '🔍 Checking presence of docker-compose.yml...'
-                sh 'ls -l docker-compose.yml'
-                sh 'head -20 docker-compose.yml'
+                echo '⚙️ Preparing Docker network kaddem-network...'
+                sh '''
+                  if ! docker network inspect kaddem-network >/dev/null 2>&1; then
+                    echo "Creating docker network kaddem-network"
+                    docker network create kaddem-network
+                  else
+                    echo "Docker network kaddem-network already exists"
+                  fi
+                '''
             }
         }
 

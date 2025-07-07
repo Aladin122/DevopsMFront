@@ -1,9 +1,8 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18-alpine'
-            args '-v $HOME/.npm:/root/.npm' // cache npm local (optionnel)
-        }
+    agent any
+
+    tools {
+        nodejs 'Node18' // Assure-toi que Node18 est bien défini dans Jenkins > Global Tools
     }
 
     environment {
@@ -11,7 +10,7 @@ pipeline {
         IMAGE_NAME = 'frontend-react'
         DOCKER_TAG = 'latest'
 
-        NEXUS_URL = 'http://192.168.235.132:8081'
+        NEXUS_URL = '192.168.235.132:8081'
         NEXUS_DOCKER_URL = '192.168.235.132:8082'
         NEXUS_DOCKER_REPO = 'docker-releases2'
 
@@ -78,9 +77,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                sh """
-                    docker build -t ${IMAGE_NAME}:${DOCKER_TAG} .
-                """
+                sh "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
             }
         }
 
@@ -110,27 +107,11 @@ pipeline {
             }
         }
 
-        stage('Prepare docker-compose.yml') {
+        stage('Check docker-compose file') {
             steps {
-                script {
-                    writeFile file: 'docker-compose.yml', text: '''
-version: '3.8'
-
-services:
-  frontend-app:
-    image: ${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}
-    container_name: frontend-app
-    ports:
-      - "3000:80"
-    networks:
-      - kaddem-network
-    restart: unless-stopped
-
-networks:
-  kaddem-network:
-    external: true
-'''
-                }
+                echo '🔍 Checking presence of docker-compose.yml...'
+                sh 'ls -l docker-compose.yml'
+                sh 'head -20 docker-compose.yml'
             }
         }
 

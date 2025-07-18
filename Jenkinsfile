@@ -77,7 +77,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                sh "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
+                sh "docker build --build-arg VITE_API_URL=http://http://192.168.235.132:8089 -t ${IMAGE_NAME}:${DOCKER_TAG} ."
             }
         }
 

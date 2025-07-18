@@ -24,9 +24,9 @@ interface AddEtudiantWithAssignmentsProps {
 }
 
 const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
-  onSuccess,
-  onCancel
-}) => {
+                                                                                 onSuccess,
+                                                                                 onCancel
+                                                                               }) => {
   const [formData, setFormData] = useState<Etudiant>({
     prenomE: '',
     nomE: '',
@@ -38,7 +38,7 @@ const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
   const [selectedEquipeId, setSelectedEquipeId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     fetchData();
@@ -60,7 +60,7 @@ const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.prenomE.trim()) {
       newErrors.prenomE = 'First name is required';
@@ -81,7 +81,7 @@ const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !selectedContractId || !selectedEquipeId) {
       return;
     }
@@ -89,9 +89,9 @@ const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
     try {
       setSaving(true);
       await etudiantService.addEtudiantWithEquipeAndContract(
-        formData,
-        selectedContractId,
-        selectedEquipeId
+          formData,
+          selectedContractId,
+          selectedEquipeId
       );
       onSuccess();
     } catch (error) {
@@ -111,207 +111,159 @@ const AddEtudiantWithAssignments: React.FC<AddEtudiantWithAssignmentsProps> = ({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
+        <div className="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-500"></div>
+        </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="backdrop-blur-xl bg-white/10 rounded-3xl border border-white/20 p-6 shadow-2xl w-full max-w-2xl my-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
-              <Users className="w-6 h-6 text-white" />
+      <div className="fixed inset-0 bg-zinc-900/70 backdrop-blur-md flex items-center justify-center z-50 p-6 overflow-y-auto">
+        <div className="bg-gradient-to-br from-zinc-800 to-zinc-700 border border-zinc-600 rounded-2xl p-6 w-full max-w-3xl shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-indigo-500">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-semibold text-white">New Student Entry</h2>
             </div>
-            <h2 className="text-xl font-bold text-white">Add Student with Assignments</h2>
+            <button
+                onClick={onCancel}
+                className="text-zinc-300 hover:text-white hover:bg-zinc-600 p-2 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onCancel}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm text-zinc-300 mb-1">First Name *</label>
+                <input
+                    name="prenomE"
+                    value={formData.prenomE}
+                    onChange={handleChange}
+                    placeholder="Enter first name"
+                    className={`w-full p-3 rounded-lg bg-zinc-800 border text-white placeholder-zinc-500 focus:outline-none focus:ring-2 ${
+                        errors.prenomE ? 'border-red-500 ring-red-400' : 'border-zinc-600 focus:ring-indigo-500'
+                    }`}
+                />
+                {errors.prenomE && <p className="text-red-400 text-sm mt-1">{errors.prenomE}</p>}
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-300 mb-1">Last Name *</label>
+                <input
+                    name="nomE"
+                    value={formData.nomE}
+                    onChange={handleChange}
+                    placeholder="Enter last name"
+                    className={`w-full p-3 rounded-lg bg-zinc-800 border text-white placeholder-zinc-500 focus:outline-none focus:ring-2 ${
+                        errors.nomE ? 'border-red-500 ring-red-400' : 'border-zinc-600 focus:ring-indigo-500'
+                    }`}
+                />
+                {errors.nomE && <p className="text-red-400 text-sm mt-1">{errors.nomE}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-zinc-300 mb-1">Option</label>
+              <input
+                  name="op"
+                  value={formData.op || ''}
+                  onChange={handleChange}
+                  placeholder="Enter option (optional)"
+                  className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-600 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-zinc-300 mb-2">Select Contract *</label>
+              <div className={`space-y-2 border rounded-lg p-3 overflow-y-auto max-h-48 ${errors.contract ? 'border-red-500' : 'border-zinc-600'}`}>
+                {contracts.map(contract => (
+                    <label
+                        key={contract.idContrat}
+                        className={`flex items-center gap-3 p-2 rounded-md transition-all cursor-pointer ${
+                            selectedContractId === contract.idContrat
+                                ? 'bg-indigo-600/30 border border-indigo-500'
+                                : 'hover:bg-zinc-700 border border-transparent'
+                        }`}
+                    >
+                      <input
+                          type="radio"
+                          name="contract"
+                          value={contract.idContrat}
+                          checked={selectedContractId === contract.idContrat}
+                          onChange={() => setSelectedContractId(contract.idContrat)}
+                          className="hidden"
+                      />
+                      <FileText className="w-5 h-5 text-indigo-400" />
+                      <div className="text-white">
+                        <p className="font-medium">{contract.specialite}</p>
+                        <p className="text-sm text-zinc-400">{contract.dateDebutContrat} - {contract.dateFinContrat}</p>
+                      </div>
+                    </label>
+                ))}
+              </div>
+              {errors.contract && <p className="text-red-400 text-sm mt-1">{errors.contract}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-zinc-300 mb-2">Select Team *</label>
+              <div className={`space-y-2 border rounded-lg p-3 overflow-y-auto max-h-48 ${errors.equipe ? 'border-red-500' : 'border-zinc-600'}`}>
+                {equipes.map(equipe => (
+                    <label
+                        key={equipe.idEquipe}
+                        className={`flex items-center gap-3 p-2 rounded-md transition-all cursor-pointer ${
+                            selectedEquipeId === equipe.idEquipe
+                                ? 'bg-purple-600/30 border border-purple-500'
+                                : 'hover:bg-zinc-700 border border-transparent'
+                        }`}
+                    >
+                      <input
+                          type="radio"
+                          name="equipe"
+                          value={equipe.idEquipe}
+                          checked={selectedEquipeId === equipe.idEquipe}
+                          onChange={() => setSelectedEquipeId(equipe.idEquipe)}
+                          className="hidden"
+                      />
+                      <Building2 className="w-5 h-5 text-purple-400" />
+                      <div className="text-white">
+                        <p className="font-medium">{equipe.nomEquipe}</p>
+                        <p className="text-sm text-zinc-400">Level: {equipe.niveau}</p>
+                      </div>
+                    </label>
+                ))}
+              </div>
+              {errors.equipe && <p className="text-red-400 text-sm mt-1">{errors.equipe}</p>}
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                  type="button"
+                  onClick={onCancel}
+                  className="flex-1 py-3 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50"
+              >
+                {saving ? (
+                    <div className="animate-spin h-5 w-5 border-b-2 border-white rounded-full"></div>
+                ) : (
+                    <>
+                      <Save className="w-5 h-5" /> Save Student
+                    </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                First Name *
-              </label>
-              <input
-                type="text"
-                name="prenomE"
-                value={formData.prenomE}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-white/20 border rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.prenomE ? 'border-red-500 focus:ring-red-500' : 'border-white/30 focus:ring-blue-500'
-                }`}
-                placeholder="Enter first name"
-              />
-              {errors.prenomE && <p className="mt-1 text-sm text-red-400">{errors.prenomE}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Last Name *
-              </label>
-              <input
-                type="text"
-                name="nomE"
-                value={formData.nomE}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-white/20 border rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.nomE ? 'border-red-500 focus:ring-red-500' : 'border-white/30 focus:ring-blue-500'
-                }`}
-                placeholder="Enter last name"
-              />
-              {errors.nomE && <p className="mt-1 text-sm text-red-400">{errors.nomE}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Option
-            </label>
-            <input
-              type="text"
-              name="op"
-              value={formData.op || ''}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              placeholder="Enter option (optional)"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Select Contract *
-            </label>
-            <div className={`space-y-2 max-h-40 overflow-y-auto border rounded-xl p-3 ${
-              errors.contract ? 'border-red-500' : 'border-white/30'
-            }`}>
-              {contracts.map((contract) => (
-                <label
-                  key={contract.idContrat}
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                    selectedContractId === contract.idContrat
-                      ? 'bg-blue-500/20 border-blue-500/50'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="contract"
-                    value={contract.idContrat}
-                    checked={selectedContractId === contract.idContrat}
-                    onChange={() => {
-                      setSelectedContractId(contract.idContrat);
-                      if (errors.contract) {
-                        setErrors(prev => ({ ...prev, contract: '' }));
-                      }
-                    }}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedContractId === contract.idContrat
-                      ? 'border-blue-500 bg-blue-500'
-                      : 'border-gray-400'
-                  }`}>
-                    {selectedContractId === contract.idContrat && (
-                      <div className="w-2 h-2 rounded-full bg-white"></div>
-                    )}
-                  </div>
-                  <FileText className="w-4 h-4 text-green-400" />
-                  <div className="flex-1">
-                    <p className="text-white font-medium">{contract.specialite}</p>
-                    <p className="text-sm text-gray-400">
-                      {contract.dateDebutContrat} - {contract.dateFinContrat}
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-            {errors.contract && <p className="mt-1 text-sm text-red-400">{errors.contract}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Select Team *
-            </label>
-            <div className={`space-y-2 max-h-40 overflow-y-auto border rounded-xl p-3 ${
-              errors.equipe ? 'border-red-500' : 'border-white/30'
-            }`}>
-              {equipes.map((equipe) => (
-                <label
-                  key={equipe.idEquipe}
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                    selectedEquipeId === equipe.idEquipe
-                      ? 'bg-purple-500/20 border-purple-500/50'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="equipe"
-                    value={equipe.idEquipe}
-                    checked={selectedEquipeId === equipe.idEquipe}
-                    onChange={() => {
-                      setSelectedEquipeId(equipe.idEquipe);
-                      if (errors.equipe) {
-                        setErrors(prev => ({ ...prev, equipe: '' }));
-                      }
-                    }}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedEquipeId === equipe.idEquipe
-                      ? 'border-purple-500 bg-purple-500'
-                      : 'border-gray-400'
-                  }`}>
-                    {selectedEquipeId === equipe.idEquipe && (
-                      <div className="w-2 h-2 rounded-full bg-white"></div>
-                    )}
-                  </div>
-                  <Building2 className="w-4 h-4 text-purple-400" />
-                  <div className="flex-1">
-                    <p className="text-white font-medium">{equipe.nomEquipe}</p>
-                    <p className="text-sm text-gray-400">Level: {equipe.niveau}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-            {errors.equipe && <p className="mt-1 text-sm text-red-400">{errors.equipe}</p>}
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium disabled:opacity-50"
-            >
-              {saving ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Create with Assignments
-                </>
-              )}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
   );
 };
-export default AddEtudiantWithAssignments
+
+export default AddEtudiantWithAssignments;

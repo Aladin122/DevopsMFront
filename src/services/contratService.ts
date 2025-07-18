@@ -1,7 +1,7 @@
 ﻿import axios from 'axios';
 import { Contrat } from '../types/types';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/Kaddem/contrat`;
+const API_URL = `http://192.168.235.132:8089/Kaddem/contrat`;
 
 export const getContrats = (): Promise<{ data: Contrat[] }> => {
   return axios.get(`${API_URL}/retrieve-all-contrats`);

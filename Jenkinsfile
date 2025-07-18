@@ -59,6 +59,13 @@ pipeline {
             }
         }
 
+        stage('Archive Build') {
+            steps {
+                echo '📦 Archiving build folder...'
+                sh 'tar -czf react-build.tar.gz dist'
+            }
+        }
+
         stage('Upload Archive to Nexus') {
             steps {
                 echo '📤 Uploading react-build.tar.gz to Nexus...'

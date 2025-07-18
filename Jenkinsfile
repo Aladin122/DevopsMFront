@@ -9,11 +9,9 @@ pipeline {
         SONARQUBE_ENV = 'SonarQubeServer'
         IMAGE_NAME = 'frontend-react'
         DOCKER_TAG = 'latest'
-
         NEXUS_URL = '192.168.235.132:8081'
         NEXUS_DOCKER_URL = '192.168.235.132:8082'
         NEXUS_DOCKER_REPO = 'docker-releases2'
-
         NEXUS_DOCKER_CREDS_ID = 'nexus-docker-creds'
         NEXUS_CREDENTIALS_ID = 'nexus-creds'
         NEXUS_REPO = 'frontend-builds'
@@ -77,7 +75,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                sh "docker build --build-arg VITE_API_URL=http://http://192.168.235.132:8089 -t ${IMAGE_NAME}:${DOCKER_TAG} ."
+                sh "docker build --build-arg VITE_API_URL=http://192.168.235.132:8089 -t ${IMAGE_NAME}:${DOCKER_TAG} ."
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿import axios from 'axios';
 import { Departement } from '../types/types';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/Kaddem/departement`;
+const API_URL = `${import.meta.env.VITE_API_URL}/kaddem/departement`;
 
 export const getDepartements = (): Promise<{ data: Departement[] }> => {
   return axios.get(`${API_URL}/retrieve-all-departements`);

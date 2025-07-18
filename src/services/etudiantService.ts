@@ -1,6 +1,6 @@
 ﻿import axios from 'axios';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/Kaddem/etudiant`;
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/kaddem/etudiant`;
 
 export interface Etudiant {
   idEtudiant?: number;

@@ -45,7 +45,7 @@ pipeline {
               sh 'VITE_API_URL=http://192.168.235.132:8089 npm run build'
           }
       }
-     
+
 
         stage('Archive Build') {
             steps {

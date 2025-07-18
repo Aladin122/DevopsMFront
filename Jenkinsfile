@@ -2,21 +2,19 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'Node18' // Ensure Node18 is configured in Jenkins Global Tools
+        nodejs 'Node18' // Assure-toi que Node18 est bien défini dans Jenkins > Global Tools
     }
 
     environment {
         SONARQUBE_ENV = 'SonarQubeServer'
         IMAGE_NAME = 'frontend-react'
         DOCKER_TAG = 'latest'
-        NEXUS_URL = 'http://192.168.235.132:8081'
+        NEXUS_URL = '192.168.235.132:8081'
         NEXUS_DOCKER_URL = '192.168.235.132:8082'
         NEXUS_DOCKER_REPO = 'docker-releases2'
-        FULL_IMAGE = "${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}"
         NEXUS_DOCKER_CREDS_ID = 'nexus-docker-creds'
         NEXUS_CREDENTIALS_ID = 'nexus-creds'
         NEXUS_REPO = 'frontend-builds'
-        VITE_API_URL = 'http://192.168.235.132:8089'
     }
 
     stages {
@@ -41,10 +39,25 @@ pipeline {
             }
         }
 
+      stage('Build') {
+          steps {
+              echo '🛠️ Building React app with API URL...'
+              sh 'VITE_API_URL=http://192.168.235.132:8089 npm run build'
+          }
+      }
+     
+
+        stage('Archive Build') {
+            steps {
+                echo '📦 Archiving dist/ into react-build.tar.gz...'
+                sh 'tar -czf react-build.tar.gz dist/'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                sh "docker build --build-arg VITE_API_URL=${VITE_API_URL} -t ${IMAGE_NAME}:${DOCKER_TAG} ."
+                sh "docker build --build-arg VITE_API_URL=http://192.168.235.132:8089 -t ${IMAGE_NAME}:${DOCKER_TAG} ."
             }
         }
 
@@ -54,17 +67,10 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: "${NEXUS_DOCKER_CREDS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
                         echo "$DOCKER_PASS" | docker login ${NEXUS_DOCKER_URL} -u "$DOCKER_USER" --password-stdin
-                        docker tag ${IMAGE_NAME}:${DOCKER_TAG} ${FULL_IMAGE}
-                        docker push ${FULL_IMAGE}
+                        docker tag ${IMAGE_NAME}:${DOCKER_TAG} ${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}
+                        docker push ${NEXUS_DOCKER_URL}/${NEXUS_DOCKER_REPO}/${IMAGE_NAME}:${DOCKER_TAG}
                     """
                 }
-            }
-        }
-
-        stage('Archive Build') {
-            steps {
-                echo '📦 Archiving build folder...'
-                sh 'tar -czf react-build.tar.gz dist'
             }
         }
 
@@ -100,7 +106,7 @@ pipeline {
                 echo '🚀 Deploying frontend container...'
                 sh '''
                     docker rm -f frontend-app || true
-                    docker-compose pull
+                    docker-compose pull || true
                     docker-compose up -d
                 '''
             }

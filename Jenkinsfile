@@ -39,13 +39,6 @@ pipeline {
             }
         }
 
-        stage('Archive Build') {
-            steps {
-                echo '📦 Archiving dist/ into react-build.tar.gz...'
-                sh 'tar -czf react-build.tar.gz dist/'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'

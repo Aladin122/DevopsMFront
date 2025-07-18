@@ -1,10 +1,12 @@
-# Stage 1: Build
-FROM node:18 AS builder
+# Stage 1: Build the app
+FROM node:18-alpine AS builder
+
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /app
 COPY . .
 
-# Install and build with VITE_API_URL provided externally
 RUN npm install
 RUN npm run build
 

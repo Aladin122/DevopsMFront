@@ -39,13 +39,12 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                echo '🛠️ Building React app...'
-                sh 'npm run build'
-            }
-        }
-
+      stage('Build') {
+          steps {
+              echo '🛠️ Building React app with API URL...'
+              sh 'VITE_API_URL=http://192.168.235.132:8089 npm run build'
+          }
+      }
         stage('SonarQube Analysis') {
             steps {
                 echo '🔍 Running SonarQube analysis...'

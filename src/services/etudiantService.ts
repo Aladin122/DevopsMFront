@@ -1,6 +1,6 @@
 ﻿import axios from 'axios';
 
-const API_BASE_URL = `http://192.168.235.132:8089/Kaddem/etudiant`;
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/Kaddem/etudiant`;
 
 export interface Etudiant {
   idEtudiant?: number;
